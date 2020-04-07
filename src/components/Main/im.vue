@@ -398,7 +398,7 @@ export default {
         })
     },
     initWebSocket () { // 初始化weosocket
-      const wsuri = 'ws://127.0.0.1:8092/api/user/friend/chat?token=' + localStorage.getItem('token')
+      const wsuri = 'ws://119.23.49.85:8092/api/user/friend/chat?token=' + localStorage.getItem('token')
       this.websock = new WebSocket(wsuri)
       this.websock.onmessage = this.websocketonmessage
       this.websock.onopen = this.websocketonopen
