@@ -326,7 +326,9 @@ export default {
         return
       }
       this.infoGet(node)
-      this.chat[this.chatMap[node.id]].more = 0
+      if (this.chatMap[node.id] != null) {
+        this.chat[this.chatMap[node.id]].more = 0
+      }
       var that = this
       that.current_chat = node
       that.select_friends = ['所有', node.label]
@@ -396,7 +398,7 @@ export default {
         })
     },
     initWebSocket () { // 初始化weosocket
-      const wsuri = 'ws://127.0.0.1:8090/api/user/friend/chat?token=' + localStorage.getItem('token')
+      const wsuri = 'ws://127.0.0.1:8092/api/user/friend/chat?token=' + localStorage.getItem('token')
       this.websock = new WebSocket(wsuri)
       this.websock.onmessage = this.websocketonmessage
       this.websock.onopen = this.websocketonopen
