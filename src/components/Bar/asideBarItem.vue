@@ -7,7 +7,8 @@
     <el-menu-item v-else :index="router.path" :key="router.path">
       <i v-if="router.index == 1" class="iconfont">&#xe611;</i>
       <i v-else-if="router.index == 2" class="iconfont">&#xe612;</i>
-      <i v-else-if="router.index == 3" class="iconfont">&#xe613;</i>
+      <i v-else-if="router.index == 3" class="iconfont">&#xe612;</i>
+      <i v-else-if="router.index == 4" class="iconfont">&#xe613;</i>
       <span style="margin-left:3px;">{{router.name}}</span>
     </el-menu-item>
 </template>

@@ -81,7 +81,7 @@ export default {
   data () {
     return {
       detail: {},
-      gender: '男',
+      gender: '',
       verify: '未认证',
       verifyDialogVisible: false,
       verify_form: {},
@@ -102,7 +102,7 @@ export default {
       })
         .then(function (response) {
           that.detail = response.data.data
-          if (response.data.data.gender === 0) {
+          if (response.data.data.gender === false) {
             that.gender = '女'
           }
           if (response.data.data.verify) {

@@ -25,8 +25,14 @@ const constantRouter = [
         component: () => import('../components/Main/space.vue')
       },
       {
-        path: '/user',
+        path: '/square',
         index: 3,
+        name: '广场',
+        component: () => import('../components/Main/square.vue')
+      },
+      {
+        path: '/user',
+        index: 4,
         name: '个人中心',
         component: () => import('../components/Main/user.vue')
       }

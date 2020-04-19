@@ -9,6 +9,7 @@
               </asideBarItem>
               <el-submenu style="float:right;">
                 <template slot="title">{{detail.username}}@baby.com</template>
+                <el-menu-item @click="toPunch">每日打卡</el-menu-item>
                 <el-menu-item index="4-2" @click="logout">退出</el-menu-item>
               </el-submenu>
             </el-menu>
@@ -23,6 +24,11 @@
                 <Content></Content>
             </el-main>
         </el-container>
+        <el-dialog title="打卡"
+        :visible.sync="punchdialogVisible" width="70%">
+          <el-calendar v-model="value">
+          </el-calendar>
+        </el-dialog>
     </el-container>
 </template>
 
@@ -38,6 +44,8 @@ export default {
   },
   data () {
     return {
+      value: new Date(),
+      punchdialogVisible: false,
       levelList: null,
       detail: {}
     }
@@ -98,6 +106,9 @@ export default {
         .catch(function (error) {
           console.log(error)
         })
+    },
+    toPunch () {
+      this.punchdialogVisible = true
     }
   },
   created () {
