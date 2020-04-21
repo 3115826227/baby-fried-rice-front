@@ -30,23 +30,23 @@
         <div id="tutor-filter">
           <el-row class="filter-row">
             <label class="filter-label">年级</label>
-            <span class="filter-col"><a>所有</a></span>
+            <span class="filter-col"><a @click="tutorQueryFilterGrade('')">所有</a></span>
             <span v-for="item in grade" :key="item.id">
-              <span class="filter-col"><a @click="getSubject(item.id)"><span>{{item.name}}</span></a></span>
+              <span class="filter-col"><a @click="tutorQueryFilterGrade(item.id)"><span>{{item.name}}</span></a></span>
             </span>
           </el-row>
           <el-row class="filter-row">
             <label class="filter-label">科目</label>
-            <span class="filter-col"><a>所有</a></span>
+            <span class="filter-col"><a @click="tutorQueryFilterSubject('')">所有</a></span>
             <span v-for="item in subject" :key="item.id">
-              <span class="filter-col"><a>{{item.name}}</a></span>
+              <span class="filter-col"><a @click="tutorQueryFilterSubject(item.id)">{{item.name}}</a></span>
             </span>
           </el-row>
           <el-row class="filter-row">
             <label class="filter-label">薪资</label>
-            <span class="filter-col"><a>所有</a></span>
+            <span class="filter-col"><a @click="tutorQueryFilterSalary('')">所有</a></span>
             <span v-for="item in salary" :key="item.id">
-              <span class="filter-col"><a>{{item.name}}</a></span>
+              <span class="filter-col"><a @click="tutorQueryFilterSalary(item.id)">{{item.name}}</a></span>
             </span>
           </el-row>
         </div>
@@ -100,10 +100,13 @@
             </div>
             <div id="tutor-page">
               <el-pagination
-                :page-size="20"
-                :pager-count="11"
+                :page-size="tutor_query.page_size"
+                :pager-count="tutor_query.page_count"
                 layout="prev, pager, next"
-                :total="1000">
+                @current-change="currentClick"
+                @prev-click="prevClick"
+                @next-click="nextClick"
+                :total="tutor_query.total">
               </el-pagination>
             </div>
           </template>
@@ -192,22 +195,16 @@ export default {
       course: [],
       grade: [],
       subject: [],
-      salary: [{
-        id: 1,
-        name: '50以下'
-      }, {
-        id: 2,
-        name: '50 ~ 60'
-      }, {
-        id: 3,
-        name: '60 ~ 70'
-      }, {
-        id: 4,
-        name: '70 ~ 80'
-      }, {
-        id: 5,
-        name: '80以上'
-      }],
+      tutor_query: {
+        grade_id: '',
+        subject_id: '',
+        salary_id: '',
+        page: 1,
+        page_size: 1,
+        page_count: 2,
+        total: 0
+      },
+      salary: [],
       bpoint_hint: 0
     }
   },
@@ -215,15 +212,19 @@ export default {
     this.getCourse()
     this.getGrade()
     this.getSubject('')
-    this.getTutor(0, 0, '')
+    this.getSalary()
+    this.getTutor()
   },
   methods: {
     getCourse () {
       var that = this
-      this.$axios.get('http://localhost:8080/api/public/job/tutor/course')
+      this.$axios.get('/public/job/tutor/course', {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
         .then(function (response) {
           that.course = response.data.data
-          console.log(that.course)
         })
         .catch(function (error) {
           console.log(error)
@@ -231,10 +232,13 @@ export default {
     },
     getGrade () {
       var that = this
-      this.$axios.get('http://localhost:8080/api/public/job/tutor/grade')
+      this.$axios.get('/public/job/tutor/grade', {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
         .then(function (response) {
           that.grade = response.data.data
-          console.log(that.grade)
         })
         .catch(function (error) {
           console.log(error)
@@ -242,10 +246,27 @@ export default {
     },
     getSubject (grade) {
       var that = this
-      this.$axios.get('http://localhost:8080/api/public/job/tutor/subject?grade_id=' + grade)
+      this.$axios.get('/public/job/tutor/subject?grade_id=' + grade, {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
         .then(function (response) {
           that.subject = response.data.data
-          console.log(that.subject)
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    getSalary () {
+      var that = this
+      this.$axios.get('/public/job/tutor/salary', {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
+        .then(function (response) {
+          that.salary = response.data.data
         })
         .catch(function (error) {
           console.log(error)
@@ -253,7 +274,6 @@ export default {
     },
     jobSearch () {
       if (this.active === 1) {
-        console.log(this.job_search)
         this.getTutor(0, 0, this.job_search)
       }
     },
@@ -268,7 +288,11 @@ export default {
     },
     tutorAdd () {
       console.log(this.job_form)
-      this.$axios.post('http://localhost:8080/api/public/job/tutor', this.job_form)
+      this.$axios.post('/public/job/tutor', this.job_form, {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
         .then(function (response) {
           console.log(response)
         })
@@ -277,12 +301,28 @@ export default {
         })
       this.TutorAdddialogVisible = false
     },
-    getTutor (page, pageSize, search) {
+    tutorQueryFilterGrade (id) {
+      this.tutor_query.grade_id = id
+      this.getTutor()
+    },
+    tutorQueryFilterSubject (id) {
+      this.tutor_query.subject_id = id
+      this.getTutor()
+    },
+    tutorQueryFilterSalary (id) {
+      this.tutor_query.salary_id = id
+      this.getTutor()
+    },
+    getTutor () {
       var that = this
-      this.$axios.get('http://localhost:8080/api/public/job/tutor?search=' + search)
+      this.$axios.get('/public/job/tutor?page_size=' + this.tutor_query.page_size + '&page=' + this.tutor_query.page + '&search=' + this.job_search + '&subject_id=' + this.tutor_query.subject_id + '&grade_id=' + this.tutor_query.grade_id + '&salary_id=' + this.tutor_query.salary_id, {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
         .then(function (response) {
-          that.tutors = response.data.data
-          console.log(that.tutors)
+          that.tutor_query.total = response.data.data.total
+          that.tutors = response.data.data.data
         })
         .catch(function (error) {
           console.log(error)
@@ -295,6 +335,17 @@ export default {
       } else {
         this.bpoint_hint = 3
       }
+    },
+    prevClick (prevPage) {
+      console.log(prevPage)
+    },
+    nextClick (nextPage) {
+      console.log(nextPage)
+    },
+    currentClick (currentPage) {
+      console.log(currentPage)
+      this.tutor_query.page = currentPage
+      this.getTutor()
     }
   }
 }
