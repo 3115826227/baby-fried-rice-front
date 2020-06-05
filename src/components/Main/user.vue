@@ -15,7 +15,10 @@
             </el-row>
             <el-row>
               <el-col :span="3" class="col-label"><label>认证情况：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="info-verify"><i><strong>V</strong></i> 已认证</span></el-col>
+              <el-col :span="6" class="col-content">
+                <span v-if='verify' class="info-verify"><i><strong>V</strong></i> 已认证</span>
+                <span v-else>未认证</span>
+              </el-col>
               <el-col :span="3" v-if="!detail.verify"><a class="a-verify" @click="toVerify">点击认证</a></el-col>
             </el-row>
             <el-divider></el-divider>
@@ -95,7 +98,7 @@ export default {
   methods: {
     getDetail () {
       var that = this
-      this.$axios.get('/account/user', {
+      this.$axios.get('/account/user/detail', {
         headers: {
           token: localStorage.getItem('token')
         }
@@ -104,9 +107,13 @@ export default {
           that.detail = response.data.data
           if (response.data.data.gender === false) {
             that.gender = '女'
+          } else {
+            that.gender = '男'
           }
-          if (response.data.data.verify) {
+          if (response.data.data.verify === true) {
             that.verify = '已认证'
+          } else {
+            that.verify = ''
           }
         })
         .catch(function (error) {

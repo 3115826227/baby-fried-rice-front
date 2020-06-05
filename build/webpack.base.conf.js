@@ -19,6 +19,7 @@ const createLintingRule = () => ({
   }
 })
 
+var webpack = require('webpack')
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
@@ -36,8 +37,17 @@ module.exports = {
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
-    }
+      'API': path.resolve(__dirname, 'assets/js/common')
+    },
   },
+  plugins: [
+    new webpack.ProvidePlugin({
+      $: "jquery",
+      jQuery: "jquery",
+      jquery: "jquery",
+      "window.jQuery": "jquery"
+    })
+  ],
   module: {
     rules: [
       ...(config.dev.useEslint ? [createLintingRule()] : []),
@@ -74,6 +84,10 @@ module.exports = {
           limit: 10000,
           name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
         }
+      },
+      {
+        test: /\.scss$/,
+        loader: 'style-loader!css-loader!postcss-loader!sass-loader',
       }
     ]
   },

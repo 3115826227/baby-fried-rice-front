@@ -11,7 +11,20 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      
+      '/apis': {
+        target: 'http://pv.sohu.com/', //源地址 
+        changeOrigin: true, //改变源 
+        pathRewrite: { 
+          '^/apis': '' //路径重写 
+        } 
+      },
+      '/api': {
+        target: 'http://127.0.0.1:8070/api', //源地址 
+        changeOrigin: true, //改变源 
+        pathRewrite: { 
+          '^/api': '' //路径重写 
+        } 
+      }
     },
 
     // Various Dev Server settings

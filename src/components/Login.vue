@@ -18,6 +18,8 @@
     </div>
 </template>
 
+<script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>
+<script>document.getElementById("ip").value=returnCitySN.cip;</script>
 <script>
 export default {
   name: 'Login',
@@ -26,10 +28,24 @@ export default {
       form: {
         login_name: '',
         password: ''
-      }
+      },
+      ip: ''
     }
   },
+  mounted () {
+    // this.getUserIP((ip) => {
+    //   this.ip = ip
+    // })
+    this.getIP()
+  },
   methods: {
+    getIP () {
+      this.$axios.get('http://pv.sohu.com/cityjson?ie=utf-8', {}).then(res => {
+        let ip = JSON.parse(res.data.substring(18,res.data.length-1)).cip
+        localStorage.setItem('ip', ip)
+        console.log(ip)
+      })
+    },
     login () {
       var that = this
       this.$axios.post('/user/login', {
@@ -40,6 +56,7 @@ export default {
           if (response.data.code === 0) {
             window.localStorage.setItem('token', response.data.data.token)
             window.localStorage.setItem('super', response.data.data.user_info.is_super)
+            window.sessionStorage.setItem('token', response.data.data.token)
             that.$router.push({path: '/index'})
           } else {
             console.log(response)

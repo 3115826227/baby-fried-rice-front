@@ -11,33 +11,52 @@
                   </div>
                   <template>
                     <ul>
-                      <li class="im-list-li" v-for="(item, index) in chat" :key="index" @click="switchChat(nodeMap[item.chat_to])">
-                        <template v-if="item.more == 0">
-                          <el-row class="im-list-top">
-                            <el-col class="im-list-remark" :span="18">
-                              <span>{{item.remark}}</span>
-                            </el-col>
-                            <el-col class="im-list-time" :span="5">{{item.time}}</el-col>
-                          </el-row>
-                          <el-row>
-                            <el-col class="im-list-content" :span="24">
-                              <span v-if="item.origin != id">{{item.remark}} ：</span>{{item.content}}
-                            </el-col>
-                          </el-row>
-                        </template>
-                        <template v-else="">
-                          <el-badge id="im-list-li-item" :value="item.more" :max="99" class="item">
-                            <el-row class="im-list-top">
-                              <el-col class="im-list-remark" :span="18">{{item.remark}}</el-col>
-                              <el-col class="im-list-time" :span="5">{{item.time}}</el-col>
-                            </el-row>
-                            <el-row>
-                              <el-col class="im-list-content" :span="24">
-                                <span v-if="item.origin != id">{{item.remark}} ：</span>{{item.content}}
-                              </el-col>
-                            </el-row>
-                          </el-badge>
-                        </template>
+                      <li class="im-list-li" v-for="(item, index) in chat" :key="index">
+                         <el-row>
+                          <el-col :span="2" style="margin-top:10px;">
+                              <span class="image" style="padding:8px;">{{item.remark[0]}}</span>
+                          </el-col>
+                          <el-col :span="22">
+                            <template v-if="item.more == 0">
+                                <el-row class="im-list-top">
+                                  <el-col class="im-list-remark" :span="18">
+                                    <span>{{item.remark}}</span>
+                                  </el-col>
+                                  <el-col class="im-list-time" :span="5">{{item.time}}</el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col class="im-list-content" :span="16">
+                                      <span v-if="item.origin != id">{{item.remark}} ：</span>{{item.content}}
+                                    </el-col>
+                                    <el-col :span="4">
+                                      <el-link type="success" :underline="false" @click="switchChat(nodeMap[item.chat_to])" style="font-size:12px;">查看会话</el-link>
+                                    </el-col>
+                                    <el-col :span="4">
+                                      <el-link type="warning" :underline="false" @click="delSession(item)"  style="font-size:12px;">删除会话</el-link>
+                                    </el-col>
+                                </el-row>
+                            </template>
+                            <template v-else="">
+                              <el-badge id="im-list-li-item" :value="item.more" :max="99" class="item">
+                                <el-row class="im-list-top">
+                                  <el-col class="im-list-remark" :span="18">{{item.remark}}</el-col>
+                                  <el-col class="im-list-time" :span="5">{{item.time}}</el-col>
+                                </el-row>
+                                <el-row>
+                                  <el-col class="im-list-content" :span="16">
+                                    <span v-if="item.origin != id">{{item.remark}} ：</span>{{item.content}}
+                                  </el-col>
+                                  <el-col :span="4">
+                                    <el-link type="success" :underline="false" @click="switchChat(nodeMap[item.chat_to])" style="font-size:12px;">查看会话</el-link>
+                                  </el-col>
+                                  <el-col :span="4">
+                                    <el-link type="warning" :underline="false" style="font-size:12px;">删除会话</el-link>
+                                  </el-col>
+                                </el-row>
+                              </el-badge>
+                            </template>
+                          </el-col>
+                        </el-row>
                       </li>
                     </ul>
                   </template>
@@ -47,10 +66,47 @@
                     <i class="iconfont">&#xeb9e;</i>
                     <span>好友列表</span>
                   </div>
+                  <div style="margin-bottom:10px;">
+                    <el-row>
+                      <el-col :span="12" style="margin-right:15px;">
+                        <el-input v-model="friend_search" size="small" placeholder="输入昵称查找好友"></el-input>
+                      </el-col>
+                      <el-col :span="5" style="margin-right:15px;">
+                        <el-button type="info" size="small">查询好友</el-button>
+                      </el-col>
+                      <el-col :span="5">
+                        <el-button type="primary" size="small">添加好友</el-button>
+                      </el-col>
+                    </el-row>
+                  </div>
                   <template class="friends-tree">
                     <el-scrollbar>
-                      <el-tree :data="friends" :props="defaultProps" accordion
-                      @node-click="handleNodeClick">
+                      <el-tree :data="friends" node-key="id" :props="defaultProps" accordion
+                      highlight-current>
+                        <span slot-scope="{node, data}" style="font-size:14px;">
+                          <el-row>
+                            <el-col :span="3">
+                              <span class="image" v-if="data.isFriend" style="padding:2px;">{{data.label[0]}}</span>
+                            </el-col>
+                            <el-col :span="17">
+                              <span>{{ node.label }}</span>
+                              <span v-if="!data.isFriend">({{data.length}})</span>
+                            </el-col>
+                            <el-col :span="4">
+                              <span v-if="data.isFriend">
+                                  <el-link type="success" :underline="false" size="mini" style="font-size:10px;" @click="handleNodeClick(data)">查看会话</el-link>
+                                  <el-link type="warning" :underline="false" size="mini" style="font-size:10px;">加入黑名单</el-link>
+                                  <el-link type="danger" :underline="false" size="mini" style="font-size:10px;">删除好友</el-link>
+                              </span>
+                            </el-col>
+                          </el-row>
+                          <!-- <span class="image" v-if="data.isFriend" style="margin:10px 0px;">{{data.label[0]}}</span> -->
+                          <!-- <span>{{ node.label }}</span> -->
+                          <!-- <span v-if="data.isFriend">
+                              <el-link type="warning" :underline="false" size="mini" style="font-size:10px;">加入黑名单</el-link>
+                              <el-link type="danger" :underline="false" size="mini" style="font-size:10px;">删除好友</el-link>
+                          </span> -->
+                        </span>
                       </el-tree>
                     </el-scrollbar>
                   </template>
@@ -60,13 +116,28 @@
                     <i class="iconfont">&#xeb95;</i>
                     <span>群组</span>
                   </div>
+                  <div style="margin-bottom:10px;">
+                    <el-row>
+                      <el-col :span="9" style="margin-right:15px;">
+                        <el-input v-model="friend_search" size="small" placeholder="输入群名称查找群"></el-input>
+                      </el-col>
+                      <el-col :span="4" style="margin-right:15px;">
+                        <el-button type="info" size="small">查询群</el-button>
+                      </el-col>
+                      <el-col :span="4" style="margin-right:15px;">
+                        <el-button type="" size="small" style="background-color:black;color:white;" @click="newAddGroupDialogVisible = true">创建群</el-button>
+                      </el-col>
+                      <el-col :span="4">
+                        <el-button type="primary" size="small">加入群</el-button>
+                      </el-col>
+                    </el-row>
+                  </div>
                   <template>
                     <span>暂未开放</span>
                   </template>
                 </el-tab-pane>
             </el-tabs>
           </div>
-          <!-- <el-button type="primary" @click="newAddFriendDialog">添加好友</el-button> -->
         </div>
         <div id="im-panel">
           <div id="im-panel-tabs" v-if="current_chat.id">
@@ -117,19 +188,24 @@
                         </el-row>
                         </template>
                       </div>
-                      <span>{{current_chat.label}}</span>
+                      <template>
+                        <span>{{current_chat.label}}</span>
+                      </template>
                     </el-tooltip>
                     <span class="user-verify" v-if="user_info.verify"><i><strong>V</strong></i> 已认证</span>
                     <span class="user-unverify" v-else="">未认证</span>
                   </div>
                   <div class="chat-label-button">
-                    <a>关闭</a>
+                    <el-link type="primary" :underline="false" @click="removeTab">关闭</el-link>
                   </div>
                 </div>
                 <template>
                    <div id="message-receive">
                        <div class="chat-hint">
-                         <span class="chat-hint-more" v-if="chatHint" @click="getFriendMessage()">点击查看更多消息</span>
+                         <span v-if="chatHint">
+                          <el-link type="primary" :underline="false" @click="getFriendMessage()" style="font-size:12px;">点击查看更多消息</el-link>
+                         </span>
+                         <!-- <span class="chat-hint-more" v-if="chatHint" @click="getFriendMessage()">点击查看更多消息</span> -->
                          <span class="chat-hint-end" v-else="">
                             没有更多消息了
                          </span>
@@ -137,8 +213,10 @@
                        <ul v-for="msg in current_chat_content" :key="msg.id">
                          <li v-if="msg.origin != current_chat.id" style="text-align:right">
                              <span class="message-content-origin">{{msg.content}}</span>
+                             <span class="image">{{username[0]}}</span>
                          </li>
                          <li v-else="">
+                             <span class="image">{{current_chat.label[0]}}</span>
                              <span class="message-content">{{msg.content}}</span>
                          </li>
                        </ul>
@@ -177,6 +255,37 @@
             <el-button type="primary" @click="addFriend">确 定</el-button>
           </span>
         </el-dialog>
+        <el-dialog title="创建群"
+        :visible.sync="newAddGroupDialogVisible"
+        width="50%" height="50%">
+          <el-row>
+            <el-col :span="11" style="border:2px solid black;border-radius:5px;height:300px;padding:10px;margin-right:20px;">
+              <div style="text-align:center;font-size:15px;margin:10px;">
+                <span>选择好友</span>
+              </div>
+              <el-tree :data="friends" show-checkbox ref="group_friend_tree"  default-expand-all :props="defaultProps"></el-tree>
+            </el-col>
+            <el-col :span="12" style="border:2px solid black;border-radius:5px;height:300px;padding:10px;">
+              <div style="text-align:center;font-size:15px;margin:10px;">
+                <span>填写群信息</span>
+              </div>
+              <template class="dialog-form">
+                <el-form :model="add_group_form" label-width="30%" label-position="right">
+                  <el-form-item label="群名称：">
+                    <el-input v-model="add_group_form.name"></el-input>
+                  </el-form-item>
+                  <el-form-item label="群标签：">
+                    <el-input v-model="add_group_form.label"></el-input>
+                  </el-form-item>
+                </el-form>
+              </template>
+            </el-col>
+          </el-row>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="newAddGroupDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addGroup">确 定</el-button>
+          </span>
+        </el-dialog>
     </div>
 </template>
 <script>
@@ -197,7 +306,9 @@ export default {
       chat: [],
       chatMap: {},
       newAddFriendDialogVisible: false,
+      newAddGroupDialogVisible: false,
       add_friend_form: {},
+      add_group_form: {},
       websock: null,
       connect: false,
       current_chat: {},
@@ -209,16 +320,23 @@ export default {
       select_friends: [],
       new_chat_message: [],
       id: '',
-      user_info: {}
+      user_info: {},
+      username: '',
+      friend_search: ''
     }
   },
   created () {
+    this.init()
     this.initMessagMp()
     this.getFriends()
     this.initWebSocket()
     this.getNewChatMessage()
+    this.getGroup()
   },
   methods: {
+    init () {
+      this.username = localStorage.getItem('username')
+    },
     timestampToTime (timestamp) {
       var date = new Date(timestamp)
       var Y = date.getFullYear() + '-'
@@ -267,8 +385,8 @@ export default {
           if (response.data.code === 0) {
             that.chat = response.data.data
             for (var i = 0; i < that.chat.length; i++) {
-              if (that.chat[i].content.length > 16) {
-                that.chat[i].content = that.chat[i].content.slice(0, 16) + '...'
+              if (that.chat[i].content.length > 10) {
+                that.chat[i].content = that.chat[i].content.slice(0, 10) + '...'
               }
               that.chat[i].time = that.timestampToTime(that.chat[i].timestamp)
               that.chatMap[that.chat[i].chat_to] = i
@@ -303,6 +421,7 @@ export default {
               id: item.id,
               label: item.name,
               isFriend: false,
+              length: 0,
               friends: []
             }
             for (var j = 0; j < item.friends.length; j++) {
@@ -312,6 +431,7 @@ export default {
                 isFriend: true
               }
               obj.friends.push(node)
+              obj.length += 1
               that.nodeMap[node.id] = node
             }
             that.friends.push(obj)
@@ -346,9 +466,6 @@ export default {
           console.log(error)
         })
     },
-    newAddFriendDialog () {
-      this.newAddFriendDialogVisible = true
-    },
     addFriend () {
       console.log(this.add_friend_form)
       var that = this
@@ -377,6 +494,55 @@ export default {
           console.log(error)
         })
     },
+    addGroup () {
+      console.log(this.$refs.group_friend_tree.getCheckedNodes())
+      var nodes = this.$refs.group_friend_tree.getCheckedNodes()
+      console.log(this.add_group_form)
+      var list = []
+      for (var i = 0; i < nodes.length; i++) {
+        list.push({
+          id: nodes[i].id,
+          remark: nodes[i].remark
+        })
+      }
+      var that = this
+      var obj = {
+        friends: list,
+        name: this.add_group_form.name
+      }
+      this.$axios.post('/im/group', obj, {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
+        .then(function (response) {
+          if (response.data.code === 0) {
+            console.log(response)
+          } else {
+            that.$message.error('群添加失败')
+          }
+        })
+        .catch(function (error) {
+          that.$message.error('群添加失败')
+          console.log(error)
+        })
+      that.newAddGroupDialogVisible = false
+    },
+    getGroup () {
+      this.$axios.get('/im/group/list', {
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
+        .then(function (response) {
+          if (response.data.code === 0) {
+            console.log(response)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
     getFriendMessage () {
       var that = this
       that.size += 10
@@ -398,7 +564,7 @@ export default {
         })
     },
     initWebSocket () { // 初始化weosocket
-      const wsuri = 'ws://localhost:8092/api/user/friend/chat?token=' + localStorage.getItem('token')
+      const wsuri = 'ws://127.0.0.1:8072/api/user/friend/chat?token=' + localStorage.getItem('token')
       this.websock = new WebSocket(wsuri)
       this.websock.onmessage = this.websocketonmessage
       this.websock.onopen = this.websocketonopen
@@ -520,6 +686,18 @@ export default {
     },
     infoLook ($event) {
       // console.log($event)
+    },
+    removeTab () {
+      // this.current_chat = null
+    },
+    delSession (node) {
+      var list = []
+      for (var i = 0; i < this.chat.length; i++) {
+        if (this.chat[i].id !== node.id) {
+          list.push(this.chat[i])
+        }
+      }
+      this.chat = list
     }
   },
   destroyed () {
@@ -670,7 +848,28 @@ ul {
 .el-tabs--border-card>.el-tabs__content {
   height: 500px;
 }
-.el-tree-node__label{
-    font-size: 25px;
+.el-tree {
+  width: 100%;
+  overflow: scroll;
+}
+.el-tree>.el-tree-node {
+  display: inline-block;
+  min-width: 100%;
+}
+.friend-tree-node {
+  height: 50px;
+}
+.image {
+  width: 38px;
+  height: 38px;
+  color: white;
+  font-size: 12px;
+  vertical-align: middle;
+  padding: 6px;
+  border: 1px solid white;
+  border-radius: 50%;
+  /* background-color: rgb(112, 118, 250); */
+  background-color: #409eff;
+  margin-right: 5px;
 }
 </style>

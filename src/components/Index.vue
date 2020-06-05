@@ -8,7 +8,10 @@
               <asideBarItem v-for="router in routers" :router="router" :key="router.path">
               </asideBarItem>
               <el-submenu style="float:right;">
-                <template slot="title">{{detail.username}}@baby.com</template>
+                <template slot="title">
+                  <span class="image">{{detail.username[0]}}</span>
+                  <span>{{detail.username}}@baby.com</span>
+                </template>
                 <el-menu-item @click="toPunch">每日打卡</el-menu-item>
                 <el-menu-item index="4-2" @click="logout">退出</el-menu-item>
               </el-submenu>
@@ -74,7 +77,7 @@ export default {
     },
     getDetail () {
       var that = this
-      this.$axios.get('/account/user', {
+      this.$axios.get('/account/user/detail', {
         headers: {
           token: localStorage.getItem('token')
         }
@@ -83,13 +86,14 @@ export default {
           if (response.data.code === 0) {
             that.detail = response.data.data
             localStorage.setItem('id', that.detail.user_id)
+            localStorage.setItem('username', that.detail.username)
           } else {
-            window.location.href = '/'
+            // window.location.href = '/'
           }
         })
         .catch(function (error) {
           console.log(error)
-          window.location.href = '/'
+          // window.location.href = '/'
         })
     },
     logout () {
@@ -134,5 +138,16 @@ export default {
 }
 .el-main {
   padding: 20px 5px;
+}
+.image {
+  width: 38px;
+  height: 38px;
+  line-height: 38px;
+  font-size: 11px;
+  vertical-align: middle;
+  padding: 5px;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background-color: rgb(112, 118, 250);
 }
 </style>

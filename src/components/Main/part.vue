@@ -200,7 +200,7 @@ export default {
         subject_id: '',
         salary_id: '',
         page: 1,
-        page_size: 1,
+        page_size: 10,
         page_count: 2,
         total: 0
       },
