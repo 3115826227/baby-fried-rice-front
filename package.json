@@ -2,7 +2,6 @@
   "name": "baby-fried-rice-front",
   "version": "1.0.0",
   "description": "A Vue.js project",
-  "author": "feizhaohui",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
@@ -15,11 +14,11 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "element-ui": "^2.13.0",
-    "node-sass": "^4.14.0",
+    "element-ui": "^2.13.2",
+    "store": "^2.0.12",
     "vue": "^2.5.2",
-    "vue-axios": "file:node_modules/vue-axios",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

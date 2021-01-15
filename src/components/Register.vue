@@ -69,15 +69,9 @@
     </div>
 </template>
 <script>
-import JcRange from '../components/Main/jcrange'
-import SlideVerify from '../components/Main/slide_verify'
-import AliCaptcha from '../components/Main/ali_captcha'
 export default {
   name: 'register',
   components: {
-    JcRange,
-    SlideVerify,
-    AliCaptcha
   },
   data () {
     return {

@@ -1,16 +1,20 @@
 <template>
-    <el-submenu :index="router.path" v-if="router.hasOwnProperty('children')">
+    <ol :index="router.path" v-if="router.hasOwnProperty('children')">
       <span slot="title">{{router.name}}</span>
         <asideBarItem v-for="child in router.children" :key="child.path" :router="child">
         </asideBarItem>
-    </el-submenu>
+    </ol>
+    <!-- <el-submenu :index="router.path" v-if="router.hasOwnProperty('children')">
+      <span slot="title">{{router.name}}</span>
+        <asideBarItem v-for="child in router.children" :key="child.path" :router="child">
+        </asideBarItem>
+    </el-submenu> -->
     <el-menu-item v-else :index="router.path" :key="router.path">
-      <i v-if="router.index == 1" class="iconfont">&#xe611;</i>
-      <i v-else-if="router.index == 2" class="iconfont">&#xe612;</i>
-      <i v-else-if="router.index == 3" class="iconfont">&#xe612;</i>
-      <i v-else-if="router.index == 4" class="iconfont">&#xe613;</i>
-      <span style="margin-left:3px;">{{router.name}}</span>
+      <span>{{router.name}}</span>
     </el-menu-item>
+    <!-- <el-menu-item v-else :index="router.path" :key="router.path">
+      <span>{{router.name}}</span>
+    </el-menu-item> -->
 </template>
 <script>
 export default {

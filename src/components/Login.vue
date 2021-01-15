@@ -10,6 +10,14 @@
           <el-form-item label="密码">
               <el-input type="password" v-model="form.password" placeholder=""></el-input>
           </el-form-item>
+          <el-form-item label="验证码">
+            <el-col :span="10" style="margin-right:20px;">
+              <el-input type="code" v-model="form.code" placeholder=""></el-input>
+            </el-col>
+            <el-col :span="10">
+              <img :src="img_code"  @click="getCode" height="40" />
+            </el-col>
+          </el-form-item>
           <el-form-item label="" id='submit'>
               <el-button type="primary" @click="login">登陆</el-button>
               <el-button type="primary" @click="register">注册</el-button>
@@ -18,32 +26,43 @@
     </div>
 </template>
 
-<script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>
-<script>document.getElementById("ip").value=returnCitySN.cip;</script>
 <script>
+
 export default {
   name: 'Login',
+  components: {},
   data () {
     return {
       form: {
         login_name: '',
         password: ''
       },
-      ip: ''
+      system: {
+        ip: '',
+        area: '',
+        brower: '',
+        os: ''
+      },
+      code_img_src: '',
+      img_code_id: '',
+      img_code: ''
     }
   },
   mounted () {
-    // this.getUserIP((ip) => {
-    //   this.ip = ip
-    // })
-    this.getIP()
+    this.getCode()
   },
   methods: {
-    getIP () {
-      this.$axios.get('http://pv.sohu.com/cityjson?ie=utf-8', {}).then(res => {
-        let ip = JSON.parse(res.data.substring(18,res.data.length-1)).cip
-        localStorage.setItem('ip', ip)
-        console.log(ip)
+    getCode () {
+      var that = this
+      this.$axios.get('/captcha', {}).then(res => {
+        that.img_code_id = res.data.captcha_id
+        that.img_code = 'http://localhost:8070' + res.data.image_url
+      })
+    },
+    verifyCode () {
+      var that = this
+      this.$axios.get('/verify/' + that.img_code_id + '/' + that.form.code, {}).then(res => {
+        console.log(res.data)
       })
     },
     login () {

@@ -9,7 +9,7 @@
               </asideBarItem>
               <el-submenu style="float:right;">
                 <template slot="title">
-                  <span class="image">{{detail.username[0]}}</span>
+                  <span><el-avatar size="small">{{detail.username[0]}}</el-avatar></span>
                   <span>{{detail.username}}@baby.com</span>
                 </template>
                 <el-menu-item @click="toPunch">每日打卡</el-menu-item>
@@ -55,6 +55,7 @@ export default {
   },
   computed: {
     routers () {
+      console.log(this.$router.options.routes)
       return this.$router.options.routes[0].children
     }
   },
@@ -79,7 +80,7 @@ export default {
       var that = this
       this.$axios.get('/account/user/detail', {
         headers: {
-          token: localStorage.getItem('token')
+          token: sessionStorage.getItem('token')
         }
       })
         .then(function (response) {
@@ -138,16 +139,5 @@ export default {
 }
 .el-main {
   padding: 20px 5px;
-}
-.image {
-  width: 38px;
-  height: 38px;
-  line-height: 38px;
-  font-size: 11px;
-  vertical-align: middle;
-  padding: 5px;
-  border: 2px solid #000;
-  border-radius: 50%;
-  background-color: rgb(112, 118, 250);
 }
 </style>

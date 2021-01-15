@@ -1,80 +1,88 @@
 <template>
     <div id="user">
-        <div class="board">
-            <el-row>
-              <el-col :span="3" class="col-label"><label>用户名：</label></el-col>
-              <el-col :span="6" class="col-content">{{detail.login_name}}</el-col>
-            </el-row>
-            <el-row>
-              <el-col :span="3" class="col-label"><label>昵称：</label></el-col>
-              <el-col :span="6" class="col-content">{{detail.username}}</el-col>
-            </el-row>
-            <el-row>
-              <el-col :span="3" class="col-label"><label>性别：</label></el-col>
-              <el-col :span="6" class="col-content">{{gender}}</el-col>
-            </el-row>
-            <el-row>
-              <el-col :span="3" class="col-label"><label>认证情况：</label></el-col>
-              <el-col :span="6" class="col-content">
-                <span v-if='verify' class="info-verify"><i><strong>V</strong></i> 已认证</span>
-                <span v-else>未认证</span>
-              </el-col>
-              <el-col :span="3" v-if="!detail.verify"><a class="a-verify" @click="toVerify">点击认证</a></el-col>
-            </el-row>
-            <el-divider></el-divider>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>姓名：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.name}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>学校：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.school}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>院系：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.faculty}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>年级：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.grade}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>专业：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.major}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>学号：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.number}}</span></el-col>
-            </el-row>
-            <el-row v-if="detail.verify">
-              <el-col :span="3" class="col-label"><label>身份证：</label></el-col>
-              <el-col :span="6" class="col-content"><span class="unmodify-info">{{detail.identify}}</span></el-col>
-            </el-row>
+      <el-divider></el-divider>
+      <div id="left-panel">
+        <div class="user-img">
+          <el-avatar icon="el-icon-user-solid" :size="150"></el-avatar>
         </div>
-        <el-dialog
-          title="用户认证"
-          :visible.sync="verifyDialogVisible"
-          width="50%" height="50%">
-          <template class="dialog-form">
-            <el-form :model="verify_form" label-width="20%" label-position="right">
-              <el-form-item label="学校">
-                <el-select @change="selectSchoolId($event)" v-model="verify_form.school_id" placeholder="使用状态">
-                  <el-option v-for="item in school" :value="item.id" :label="item.name" :key="item.id"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="姓名：">
-                <el-input v-model="verify_form.name"></el-input>
-              </el-form-item>
-              <el-form-item label="身份证：">
-                <el-input v-model="verify_form.identify"></el-input>
-              </el-form-item>
-            </el-form>
-          </template>
-          <span slot="footer" class="dialog-footer">
-            <el-button @click="verifyDialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="userVerify">确 定</el-button>
-          </span>
-        </el-dialog>
+        <div style="font-size:13px;"><el-link>点击更换头像</el-link></div>
+        <div class="user-panel">
+          <div class="user-title">我的生活哲理</div>
+          <div class="user-desc">&nbsp;&nbsp;&nbsp;&nbsp;{{user_desc}}</div>
+          <div>
+            <el-link>编辑</el-link>
+          </div>
+        </div>
+      </div>
+      <div id="right-panel">
+        <div class="base-info">
+          <div class="base-info-title">基本信息</div>
+          <div class="base-info-panel">
+            <el-row>
+              <el-col :span="6">ID：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.account_id}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">用户名：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.username}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">用户名密码：</el-col>
+              <el-col :span="10" style="text-align: right;"><el-link type="primary" style="font-size:17px;font-weight:normal;">修改</el-link></el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">积分：</el-col>
+              <el-col :span="10" style="text-align: right;"><span style="color: red;">{{user_coins}}</span> 币</el-col>
+              <el-col :span="5" style="text-align: center;"><el-link style="font-size:17px;font-weight:normal;">积分规则</el-link></el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">手机号码：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.phone}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">性别：</el-col>
+              <el-col :span="10" style="text-align: right;">
+                <span v-if="detail.gender">男</span>
+                <span v-else>女</span>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">年龄：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.age}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">身份证号：</el-col>
+              <el-col :span="10" style="text-align: right;"><el-link type="primary" style="font-size:17px;font-weight:normal;">查看</el-link></el-col>
+            </el-row>
+          </div>
+        </div>
+        <el-divider></el-divider>
+        <div id="school-info" v-if="detail.verify">
+          <div class="school-info-title">学校信息</div>
+          <div class="school-info-panel">
+            <el-row>
+              <el-col :span="6">学校：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.school}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">院系：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.faculty}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">专业：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.major}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">年级：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.grade}}</el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">学号：</el-col>
+              <el-col :span="10" style="text-align: right;">{{detail.number}}</el-col>
+            </el-row>
+          </div>
+        </div>
+      </div>
     </div>
 </template>
 
@@ -84,11 +92,12 @@ export default {
   data () {
     return {
       detail: {},
-      gender: '',
       verify: '未认证',
       verifyDialogVisible: false,
       verify_form: {},
-      school: []
+      school: [],
+      user_desc: '没有过不去的坎，我们一起努力。既然选择了远方，便只顾风雨兼程。',
+      user_coins: 232
     }
   },
   created () {
@@ -105,38 +114,18 @@ export default {
       })
         .then(function (response) {
           that.detail = response.data.data
-          if (response.data.data.gender === false) {
-            that.gender = '女'
-          } else {
-            that.gender = '男'
-          }
           if (response.data.data.verify === true) {
             that.verify = '已认证'
           } else {
             that.verify = ''
           }
-        })
-        .catch(function (error) {
-          console.log(error)
-        })
-    },
-    toVerify () {
-      this.verifyDialogVisible = true
-    },
-    userVerify () {
-      var that = this
-      this.$axios.post('/account/user/verify', this.verify_form, {
-        headers: {
-          token: localStorage.getItem('token')
-        }
-      })
-        .then(function (response) {
-          if (response.data.code === 0) {
-            that.getDetail()
-            that.$message.success('认证成功')
-          } else {
-            that.$message.success('认证失败')
-          }
+          that.detail.number = '1541305032'
+          that.detail.school = '邵阳学院'
+          that.detail.phone = '15688220367'
+          that.detail.faculty = '信息工程学院'
+          that.detail.grade = '2015'
+          that.detail.major = '网络工程'
+          that.detail.age = 23
         })
         .catch(function (error) {
           console.log(error)
@@ -162,28 +151,65 @@ export default {
 
 <style scoped>
 #user {
-  margin-top: 50px;
-  margin-left: 50px;
+  margin-top: 10px;
+  margin-left: 180px;
+  height: 690px;
+  float: left;
+  padding: 10px;
 }
-.el-row {
-  margin-bottom: 30px;
-}
-.col-label {
-  text-align: right;
-}
-.col-content {
+#left-panel {
+  width: 200px;
+  float: left;
   text-align: center;
 }
-.a-verify {
-  color: blue;
+#right-panel {
+  float: left;
+  width: 500px;
+  margin-left: 20px;
 }
-.info-verify {
-  background-color: #efc100;
-  color: white;
-  border-radius: 5px;
-  padding: 5px;
+.user-img {
+  padding: 10px;
 }
-.unmodify-info {
+.user-title {
+  padding: 10px;
+}
+.user-panel {
+  margin-top: 20px;
+}
+.user-desc {
+  text-align: left;
+  padding: 10px;
+  font-size: 14px;
   color: gray;
+}
+.base-info-title {
+  padding: 10px;
+  font-size: 20px;
+  font-weight: inherit;
+}
+.base-info-panel {
+  margin-left: 22px;
+  font-size: 17px;
+  color: grey;
+}
+.base-info-panel .el-row {
+  padding: 5px;
+  margin-left: 20px;
+  /* text-align: right; */
+}
+.school-info-title {
+  padding: 10px;
+  font-size: 20px;
+  font-weight: inherit;
+}
+.school-info-panel {
+  margin-left: 22px;
+  font-size: 17px;
+  color: grey;
+}
+.school-info-panel .el-row {
+  padding: 5px;
+  margin-left: 20px;
+  /* text-align: right; */
 }
 </style>

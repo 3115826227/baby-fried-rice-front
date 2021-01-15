@@ -75,40 +75,13 @@
                         <el-button type="info" size="small">查询好友</el-button>
                       </el-col>
                       <el-col :span="5">
-                        <el-button type="primary" size="small">添加好友</el-button>
+                        <el-button type="primary" size="small" @click="newAddFriendDialogVisible = true">添加好友</el-button>
                       </el-col>
                     </el-row>
                   </div>
                   <template class="friends-tree">
-                    <el-scrollbar>
-                      <el-tree :data="friends" node-key="id" :props="defaultProps" accordion
-                      highlight-current>
-                        <span slot-scope="{node, data}" style="font-size:14px;">
-                          <el-row>
-                            <el-col :span="3">
-                              <span class="image" v-if="data.isFriend" style="padding:2px;">{{data.label[0]}}</span>
-                            </el-col>
-                            <el-col :span="17">
-                              <span>{{ node.label }}</span>
-                              <span v-if="!data.isFriend">({{data.length}})</span>
-                            </el-col>
-                            <el-col :span="4">
-                              <span v-if="data.isFriend">
-                                  <el-link type="success" :underline="false" size="mini" style="font-size:10px;" @click="handleNodeClick(data)">查看会话</el-link>
-                                  <el-link type="warning" :underline="false" size="mini" style="font-size:10px;">加入黑名单</el-link>
-                                  <el-link type="danger" :underline="false" size="mini" style="font-size:10px;">删除好友</el-link>
-                              </span>
-                            </el-col>
-                          </el-row>
-                          <!-- <span class="image" v-if="data.isFriend" style="margin:10px 0px;">{{data.label[0]}}</span> -->
-                          <!-- <span>{{ node.label }}</span> -->
-                          <!-- <span v-if="data.isFriend">
-                              <el-link type="warning" :underline="false" size="mini" style="font-size:10px;">加入黑名单</el-link>
-                              <el-link type="danger" :underline="false" size="mini" style="font-size:10px;">删除好友</el-link>
-                          </span> -->
-                        </span>
-                      </el-tree>
-                    </el-scrollbar>
+                    <el-tree :data="friends" :props="defaultProps" @node-click="selectFriend">
+                    </el-tree>
                   </template>
                 </el-tab-pane>
                 <el-tab-pane class="im-el-tab-pane" name="3">
@@ -133,7 +106,16 @@
                     </el-row>
                   </div>
                   <template>
-                    <span>暂未开放</span>
+                    <div v-for="group in groups" :key="group.id" @click="selectGroup(group)">
+                        <el-row class="group-list">
+                          <el-col :span="3">
+                            <span class="image" style="padding:12px;">{{group.name[0]}}</span>
+                          </el-col>
+                          <el-col :span="12">
+                            {{group.name}}
+                          </el-col>
+                        </el-row>
+                    </div>
                   </template>
                 </el-tab-pane>
             </el-tabs>
@@ -144,6 +126,7 @@
               <el-card class="box-card">
                 <div slot="header" class="clearfix">
                   <div class="chat-label" v-on:mouseover="infoLook($event)">
+                    <template  v-if="current_chat.type === 'friend'">
                     <el-tooltip effect="dark" placement="right">
                       <div class="chat-label-info" slot="content" style="width:150px">
                         <el-row>
@@ -189,52 +172,206 @@
                         </template>
                       </div>
                       <template>
-                        <span>{{current_chat.label}}</span>
+                        <span>{{current_chat.remark}}</span>
                       </template>
                     </el-tooltip>
                     <span class="user-verify" v-if="user_info.verify"><i><strong>V</strong></i> 已认证</span>
                     <span class="user-unverify" v-else="">未认证</span>
+                    </template>
+                    <template v-else-if="current_chat.type === 'group'">
+                      <template>
+                        <span>{{current_chat.name}}</span>
+                      </template>
+                      <span class="user-verify" v-if="user_info.official"><i><strong>V</strong></i> 官方群</span>
+                      <span class="user-unverify" v-else="">非官方群</span>
+                    </template>
                   </div>
                   <div class="chat-label-button">
-                    <el-link type="primary" :underline="false" @click="removeTab">关闭</el-link>
+                    <el-link type="primary" :underline="false" @click="removeTab">关闭聊天窗口</el-link>
+                    <el-link type="primary" :underline="false" @click="isCollapse = !isCollapse">
+                      <span v-if="!isCollapse">打开详情</span>
+                      <span v-else="">关闭详情</span>
+                    </el-link>
                   </div>
                 </div>
                 <template>
                    <div id="message-receive">
                        <div class="chat-hint">
                          <span v-if="chatHint">
-                          <el-link type="primary" :underline="false" @click="getFriendMessage()" style="font-size:12px;">点击查看更多消息</el-link>
+                          <el-link type="primary" :underline="false" @click="getMessage()" style="font-size:12px;">点击查看更多消息</el-link>
                          </span>
-                         <!-- <span class="chat-hint-more" v-if="chatHint" @click="getFriendMessage()">点击查看更多消息</span> -->
                          <span class="chat-hint-end" v-else="">
                             没有更多消息了
                          </span>
                        </div>
-                       <ul v-for="msg in current_chat_content" :key="msg.id">
-                         <li v-if="msg.origin != current_chat.id" style="text-align:right">
-                             <span class="message-content-origin">{{msg.content}}</span>
+                       <el-row v-for="msg in current_chat_content" :key="msg.id" style="padding:18px 0px;">
+                          <template v-if="current_chat.type === 'friend'">
+                            <template v-if="msg.sender != current_chat.friend">
+                              <el-col :span="24" style="text-align:right">
+                                <el-row>
+                                  <el-col :span="22">
+                                    <span v-if="msg.image">
+                                      <img class="sr-image" :src="msg.message_body" width="24px">
+                                    </span>
+                                    <span class="message-content" v-else="">
+                                      {{msg.message_body}}
+                                    </span>
+                                  </el-col>
+                                  <el-col :span="1" style="margin-left:8px;">
+                                    <span class="image">{{username[0]}}</span>
+                                  </el-col>
+                                </el-row>
+                              </el-col>
+                            </template>
+                            <template v-else="">
+                              <el-col :span="24" style="text-align:left">
+                                <el-row>
+                                  <el-col :span="1" style="margin-right:8px;">
+                                    <span class="image">{{current_chat.remark[0]}}</span>
+                                  </el-col>
+                                  <el-col :span="22">
+                                    <span v-if="msg.image">
+                                      <img class="sr-image" :src="msg.message_body" width="24px">
+                                    </span>
+                                    <span class="message-content" v-else="">
+                                      {{msg.message_body}}
+                                    </span>
+                                  </el-col>
+                                </el-row>
+                              </el-col>
+                            </template>
+                          </template>
+                       </el-row>
+                       <!-- <ul v-for="msg in current_chat_content" :key="msg.id">
+                         <template v-if="current_chat.type === 'friend'">
+                           <li v-if="msg.sender != current_chat.friend" style="text-align:right">
+                             {{msg.message_body}}
+                             <span class="message-content">{{msg.message_body}}</span>
+                                <span v-if="msg.image">
+                                  <img class="sr-image" :src="msg.message_body" width="24px">
+                                </span>
+                                <span class="message-content" v-else="">
+                                  {{msg.message_body}}
+                                </span>
                              <span class="image">{{username[0]}}</span>
-                         </li>
-                         <li v-else="">
-                             <span class="image">{{current_chat.label[0]}}</span>
-                             <span class="message-content">{{msg.content}}</span>
-                         </li>
-                       </ul>
+                          </li>
+                          <li v-else="">
+                              <span class="image">{{current_chat.remark[0]}}</span>
+                              <span class="message-content">{{msg.message_body}}</span>
+                              <span v-if="msg.image">
+                                  <img class="sr-image" :src="msg.message_body" width="24px">
+                              </span>
+                              <span class="message-content" v-else="">
+                                  {{msg.message_body}}
+                              </span>
+                          </li>
+                         </template>
+                         <template v-else-if="current_chat.type === 'group'">
+                           <li v-if="msg.sender == id" style="text-align:right">
+                             <span class="message-content">{{msg.message_body}}</span>
+                             <span class="image">{{username[0]}}</span>
+                           </li>
+                           <li v-else="">
+                              <span class="image">{{msg.sender_remark[0]}}</span>
+                              <span class="message-content">{{msg.message_body}}</span>
+                          </li>
+                         </template>
+                       </ul> -->
                    </div>
-                   <el-divider></el-divider>
+                   <!-- <el-divider></el-divider> -->
+                   <div id="message-tools">
+                     <el-row>
+                       <el-col :span="1">
+                         <el-popover placement="top" v-model="wxImgVisisable" width="600" style="text-aligh:center">
+                            <div>
+                              <div v-for="(item, index) in wxImgList" :key="index" style="float:left;padding:4px">
+                                <img :src="'https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/' + index + '.gif'" @click="imgClick(index)">
+                              </div>
+                            </div>
+                            <span slot="reference">
+                              <img src="../../assets/smile.png" width="15px">
+                            </span>
+                         </el-popover>
+                       </el-col>
+                       <el-col :span="1">
+                         <el-upload
+                          action="''"
+                          :http-request="upload"
+                          ref="file"
+                          :before-upload="beforeAvatarUpload">
+                          <i class="el-icon-picture"></i>
+                        </el-upload>
+                         <!-- <i class="el-icon-picture"></i> -->
+                       </el-col>
+                       <el-col :span="1">
+                         <i class="el-icon-folder"></i>
+                       </el-col>
+                     </el-row>
+                      <!-- <div style="width:70%;margin:0 15%;">
+                        <div v-for="(item, index) in wxImgList" :key="index" style="float:left;padding:4px">
+                          <img :src="'https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/' + index + '.gif'" @click="imgClick(index)">
+                        </div>
+                      </div> -->
+                   </div>
                    <div id="message-send">
                        <el-form :model="send_form">
                          <el-form-item label="">
                             <el-input type="textarea" rows="3" v-model="send_form.desc" @input="changeSendContent"></el-input>
                         </el-form-item>
                         <el-form-item label="" id="message-send-button">
-                            <el-button type="primary" @click="send">发送</el-button>
+                            <el-button type="primary" @click="send" size="medium">发送</el-button>
                         </el-form-item>
                        </el-form>
                    </div>
                 </template>
               </el-card>
           </div>
+        </div>
+        <div class="chat-label-detail" v-if="isCollapse && this.current_chat.id">
+          <div id="chat-label-detail-title">
+            <label>详情信息</label>
+          </div>
+          <!-- <el-divider></el-divider> -->
+          <template v-if="this.current_chat.type === 'friend'">
+            <el-row class="chat-detail-list">
+              <el-col :span="16">成为好友：</el-col>
+              <el-col :span="8">5 天</el-col>
+            </el-row>
+            <el-row class="chat-detail-list">
+              <el-col :span="16">连续聊天：</el-col>
+              <el-col :span="8">3 天</el-col>
+            </el-row>
+            <el-row class="chat-detail-list">
+              <el-col :span="16">消息发送：</el-col>
+              <el-col :span="8">2 条</el-col>
+            </el-row>
+            <el-row class="chat-detail-list">
+              <el-col :span="16">消息接收：</el-col>
+              <el-col :span="8">21 条</el-col>
+            </el-row>
+            <el-row class="chat-detail-list">
+              <el-col :span="16">共同群聊：</el-col>
+              <el-col :span="8">2 个</el-col>
+            </el-row>
+            <el-divider></el-divider>
+            <el-form model="friend_detail_form" label-width="80px">
+              <el-form-item label="特别关注">
+                <el-switch v-model="friend_detail_form.care"></el-switch>
+              </el-form-item>
+              <el-form-item label="消息接收">
+                <el-switch v-model="friend_detail_form.message_receive"></el-switch>
+              </el-form-item>
+              <el-form-item label="黑名单">
+                <el-switch v-model="friend_detail_form.black_list"></el-switch>
+              </el-form-item>
+            </el-form>
+            <el-row class="chat-detail-list">
+              <el-button type="success" size="small">查看历史消息</el-button>
+            </el-row>
+            <el-row class="chat-detail-list">
+              <el-button type="danger" size="small">删除好友</el-button>
+            </el-row>
+          </template>
         </div>
         <el-dialog
           title="添加好友"
@@ -247,6 +384,16 @@
               </el-form-item>
               <el-form-item label="好友标签：">
                 <el-input v-model="add_friend_form.remark"></el-input>
+              </el-form-item>
+              <el-form-item label="分组名称：">
+                <template v-if="friendCategories.length">
+                  <el-select v-model="add_friend_form.category" placeholder="请选择分组">
+                    <el-option v-for="item in friendCategories" :label="item.name" :value="item.name" :key="item.id"></el-option>
+                  </el-select>
+                </template>
+                <template v-else="">
+                  <el-input v-model="add_friend_form.category"></el-input>
+                </template>
               </el-form-item>
             </el-form>
           </template>
@@ -296,9 +443,10 @@ export default {
       activeName: '1',
       name: '1',
       friends: [],
+      friendCategories: [],
       defaultProps: {
         children: 'friends',
-        label: 'label'
+        label: 'remark'
       },
       message_panel: {},
       send_form: {},
@@ -322,13 +470,20 @@ export default {
       id: '',
       user_info: {},
       username: '',
-      friend_search: ''
+      friend_search: '',
+      groups: [],
+      isCollapse: true,
+      friend_detail_form: {},
+      wxImgList: ['微笑', '撇嘴', '色', '发呆', '得意', '流泪', '害羞', '闭嘴', '睡', '大哭', '尴尬', '发怒', '调皮', '呲牙', '惊讶', '难过', '酷', '冷汗', '抓狂', '吐', '偷笑', '可爱', '白眼', '傲慢', '饥饿', '困', '惊恐', '流汗', '憨笑', '大兵', '奋斗', '咒骂', '疑问', '嘘', '晕', '折磨', '衰', '骷髅', '敲打', '再见', '擦汗', '抠鼻', '鼓掌', '糗大了', '坏笑', '左哼哼', '右哼哼', '哈欠', '鄙视', '委屈', '快哭了', '阴险', '亲亲', '吓', '可怜', '菜刀', '西瓜', '啤酒', '篮球', '乒乓', '咖啡', '饭', '猪头', '玫瑰', '凋谢', '示爱', '爱心', '心碎', '蛋糕', '闪电', '炸弹', '刀', '足球', '瓢虫', '便便', '月亮', '太阳', '礼物', '拥抱', '强', '弱', '握手', '胜利', '抱拳', '勾引', '拳头', '差劲', '爱你', 'NO', 'OK', '爱情', '飞吻', '跳跳', '发抖', '怄火', '转圈', '磕头', '回头', '跳绳', '挥手', '激动', '街舞', '献吻', '左太极', '右太极'],
+      wxImgVisisable: false,
+      file: {}
     }
   },
   created () {
     this.init()
     this.initMessagMp()
     this.getFriends()
+    this.getFriendCategory()
     this.initWebSocket()
     this.getNewChatMessage()
     this.getGroup()
@@ -371,41 +526,31 @@ export default {
       }
       return true
     },
-    getNewChatMessage () {
-      if (!this.judgeIsConnect) {
-        return
-      }
+    getFriendCategory () {
       var that = this
-      this.$axios.get('/im/chat/message/new', {
+      this.$axios.get('/im/friend/category', {
         headers: {
           token: localStorage.getItem('token')
         }
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.friendCategories = response.data.data
+        }
       })
-        .then(function (response) {
-          if (response.data.code === 0) {
-            that.chat = response.data.data
-            for (var i = 0; i < that.chat.length; i++) {
-              if (that.chat[i].content.length > 10) {
-                that.chat[i].content = that.chat[i].content.slice(0, 10) + '...'
-              }
-              that.chat[i].time = that.timestampToTime(that.chat[i].timestamp)
-              that.chatMap[that.chat[i].chat_to] = i
-            }
-          }
-        })
         .catch(function (error) {
           console.log(error)
         })
     },
-    handleNodeClick (val) {
-      if (val.isFriend) {
-        this.switchChat(val)
+    selectFriend (val) {
+      if (val.id === '') {
+        return
       }
+      this.userInfoGet(val.friend)
+      this.current_chat = val
+      this.current_chat.type = 'friend'
+      this.getMessage()
     },
     handleClick (val) {
-      if (this.name === '1') {
-        this.getNewChatMessage()
-      }
     },
     getFriends () {
       var that = this
@@ -413,65 +558,24 @@ export default {
         headers: {
           token: localStorage.getItem('token')
         }
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.friends = response.data.data
+        }
       })
-        .then(function (response) {
-          for (var i = 0; i < response.data.data.length; i++) {
-            var item = response.data.data[i]
-            var obj = {
-              id: item.id,
-              label: item.name,
-              isFriend: false,
-              length: 0,
-              friends: []
-            }
-            for (var j = 0; j < item.friends.length; j++) {
-              var node = {
-                id: item.friends[j].friend,
-                label: item.friends[j].remark,
-                isFriend: true
-              }
-              obj.friends.push(node)
-              obj.length += 1
-              that.nodeMap[node.id] = node
-            }
-            that.friends.push(obj)
-          }
-        })
         .catch(function (error) {
           console.log(error)
         })
     },
     switchChat (node) {
-      if (!this.judgeIsConnect) {
-        return
-      }
-      this.infoGet(node)
-      if (this.chatMap[node.id] != null) {
-        this.chat[this.chatMap[node.id]].more = 0
-      }
-      var that = this
-      that.current_chat = node
-      that.select_friends = ['所有', node.label]
-      this.$axios.get('/im/chat/message/friend/history?friend=' + node.id + '&size=' + that.size, {
-        headers: {
-          token: localStorage.getItem('token')
-        }
-      })
-        .then(function (response) {
-          if (response.data.code === 0) {
-            that.current_chat_content = response.data.data
-          }
-        })
-        .catch(function (error) {
-          console.log(error)
-        })
     },
     addFriend () {
       console.log(this.add_friend_form)
       var that = this
       var obj = {
-        user_id: that.add_friend_form.id,
-        remark: that.add_friend_form.remark
+        account_id: that.add_friend_form.id,
+        remark: that.add_friend_form.remark,
+        category: that.add_friend_form.category
       }
       this.$axios.post('/im/friend', obj, {
         headers: {
@@ -495,21 +599,20 @@ export default {
         })
     },
     addGroup () {
-      console.log(this.$refs.group_friend_tree.getCheckedNodes())
-      var nodes = this.$refs.group_friend_tree.getCheckedNodes()
-      console.log(this.add_group_form)
-      var list = []
-      for (var i = 0; i < nodes.length; i++) {
-        list.push({
-          id: nodes[i].id,
-          remark: nodes[i].remark
-        })
-      }
-      var that = this
+      let nodes = this.$refs.group_friend_tree.getCheckedNodes()
+      let friends = []
+      nodes.forEach(element => {
+        if (element.friend !== undefined) {
+          friends.push({
+            id: element.friend
+          })
+        }
+      })
       var obj = {
-        friends: list,
+        friends: friends,
         name: this.add_group_form.name
       }
+      var that = this
       this.$axios.post('/im/group', obj, {
         headers: {
           token: localStorage.getItem('token')
@@ -517,51 +620,77 @@ export default {
       })
         .then(function (response) {
           if (response.data.code === 0) {
-            console.log(response)
+            that.getGroup()
+            that.newAddGroupDialogVisible = false
+            that.$message.success('群组添加成功')
           } else {
-            that.$message.error('群添加失败')
+            that.newAddGroupDialogVisible = false
+            that.$message.error('群组添加失败')
           }
         })
         .catch(function (error) {
-          that.$message.error('群添加失败')
+          that.newAddGroupDialogVisible = false
+          that.$message.error('群组添加失败')
           console.log(error)
         })
-      that.newAddGroupDialogVisible = false
     },
     getGroup () {
+      var that = this
       this.$axios.get('/im/group/list', {
         headers: {
           token: localStorage.getItem('token')
         }
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.groups = response.data.data
+        }
       })
-        .then(function (response) {
-          if (response.data.code === 0) {
-            console.log(response)
-          }
-        })
         .catch(function (error) {
           console.log(error)
         })
     },
-    getFriendMessage () {
+    selectGroup (group) {
+      this.current_chat = group
+      this.current_chat.type = 'group'
+      this.getMessage()
+    },
+    /*
+      获取用户消息列表
+    */
+    getNewChatMessage () {
+    },
+    /*
+      获取用户的聊天记录
+    */
+    getMessage () {
       var that = this
-      that.size += 10
-      this.$axios.get('/im/chat/message/friend/history?friend=' + that.current_chat.id + '&size=' + that.size, {
-        headers: {
-          token: localStorage.getItem('token')
-        }
-      })
-        .then(function (response) {
+      if (this.current_chat.type === 'friend') {
+        this.$axios.get('/im/chat/message/history?message_type=1&friend=' + this.current_chat.friend, {
+          headers: {
+            token: localStorage.getItem('token')
+          }
+        }).then(function (response) {
           if (response.data.code === 0) {
             that.current_chat_content = response.data.data
-            if (that.current_chat_content.length < that.size) {
-              that.chatHint = 0
-            }
           }
         })
-        .catch(function (error) {
-          console.log(error)
+          .catch(function (error) {
+            console.log(error)
+          })
+      } else if (this.current_chat.type === 'group') {
+        this.$axios.get('/im/chat/message/history?message_type=2&group=' + this.current_chat.id, {
+          headers: {
+            token: localStorage.getItem('token')
+          }
+        }).then(function (response) {
+          if (response.data.code === 0) {
+            that.current_chat_content = response.data.data
+          }
         })
+          .catch(function (error) {
+            console.log(error)
+          })
+      }
     },
     initWebSocket () { // 初始化weosocket
       const wsuri = 'ws://127.0.0.1:8072/api/user/friend/chat?token=' + localStorage.getItem('token')
@@ -580,60 +709,16 @@ export default {
     },
     websocketonmessage (e) { // 数据接收
       let redata = JSON.parse(e.data)
-      if (!redata.connect) {
-        console.log('连接失败')
-        this.connect = false
-      } else {
-        let index = this.chatMap[redata.origin]
-        if (redata.origin === this.id) {
-          index = this.chatMap[redata.friend]
-        }
-        let obj = {
-          origin: redata.origin,
-          friend: redata.friend,
-          id: '',
-          types: redata.types,
-          remark: redata.remark,
-          content: redata.content,
-          timestamp: redata.create_time,
-          time: this.timestampToTime(redata.create_time),
-          read: false
-        }
-        if (index == null) {
-          obj.more = 1
-          if (redata.origin === this.id) {
-            obj.chat_to = redata.friend
-          } else {
-            obj.chat_to = redata.origin
-          }
-        } else {
-          obj.remark = this.chat[index].remark
-          obj.chat_to = this.chat[index].chat_to
-          if (redata.origin !== this.id) {
-            obj.more = this.chat[index].more + 1
-          }
-        }
-        let newChat = []
-        let i
-        let num = 0
-        newChat.push(obj)
-        this.chatMap[obj.origin] = num
-        num++
-        for (i = 0; i < this.chat.length; i++) {
-          if (i === index) {
-            if (index != null) {
-              continue
-            }
-          }
-          newChat.push(this.chat[i])
-          this.chatMap[this.chat[i]] = num
-          num++
-        }
-        this.chat = newChat
-        if (redata.friend === this.current_chat.id || redata.origin === this.current_chat.id) {
-          this.current_chat_content.push(redata)
-        }
+      console.log(redata)
+      if (this.current_chat.friend === redata.sender || this.current_chat.friend === redata.receive) {
+        this.current_chat_content.push(redata)
       }
+      // if (!redata.connect) {
+      //   console.log('连接失败')
+      //   this.connect = false
+      // } else {
+      //   console.log('连接成功')
+      // }
     },
     websocketsend (Data) { // 数据发送
       this.websock.send(Data)
@@ -647,14 +732,22 @@ export default {
         return
       }
       let actions = {
-        origin: localStorage.getItem('id'),
-        friend: this.current_chat.id,
+        sender: localStorage.getItem('id'),
         token: localStorage.getItem('token'),
-        remark: this.current_chat.label,
-        content: this.send_form.desc,
-        create_time: new Date().getTime(),
-        is_friend: true,
-        status: true
+        body_type: 1,
+        image: this.send_form.image,
+        message_body: this.send_form.desc,
+        timestamp: new Date().getTime()
+      }
+      if (this.send_form.image) {
+        actions.body_type = 2
+      }
+      if (this.current_chat.type === 'friend') {
+        actions.message_type = 1
+        actions.receive = this.current_chat.friend
+      } else if (this.current_chat.type === 'group') {
+        actions.message_type = 2
+        actions.group_id = this.current_chat.id
       }
       this.websocketsend(JSON.stringify(actions))
       this.send_form = {}
@@ -667,9 +760,9 @@ export default {
         }
       }
     },
-    infoGet (val) {
+    userInfoGet (id) {
       var that = this
-      this.$axios.get('/account/user/info?id=' + val.id, {
+      this.$axios.get('/account/user/info?id=' + id, {
         headers: {
           token: localStorage.getItem('token')
         }
@@ -677,7 +770,7 @@ export default {
         .then(function (response) {
           if (response.data.code === 0) {
             that.user_info = response.data.data
-            that.user_info.remark = val.label
+            that.user_info.remark = that.current_chat.remark
           }
         })
         .catch(function (error) {
@@ -698,6 +791,38 @@ export default {
         }
       }
       this.chat = list
+    },
+    // 图片上传前验证
+    beforeAvatarUpload (file) {
+      const isLt2M = file.size / 1024 / 1024 < 2
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!')
+      }
+      return isLt2M
+    },
+    // 上传图片
+    upload (item) {
+      var that = this
+      let form = new FormData()
+      let file = this.$refs.file.uploadFiles[0]
+      form.append('file', file.raw, file.name)
+      this.$axios.post('http://localhost:8051/api/upload', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(response => {
+        that.send_form.image = true
+        that.send_form.desc = response.data.data.down_url
+        that.send()
+        // that.$message.success('发送成功')
+      })
+    },
+    imgClick (index) {
+      this.wxImgVisisable = false
+      let imgUrl = 'https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/' + index + '.gif'
+      this.send_form.image = true
+      this.send_form.desc = imgUrl
+      this.send()
     }
   },
   destroyed () {
@@ -737,15 +862,33 @@ export default {
 #im-panel {
     float: left;
     margin-left: 20px;
-    width: 68%;
+    width: 52%;
     line-height: 10px;
     font-size: 14px;
+}
+.chat-label-detail {
+  float: left;
+  background: #FFF;
+  padding: 10px;
+  border-radius: 5px;
+  line-height: 10px;
+  height: 632px;
+  width: 15%;
+  color: #606266;
+  font-size: 14px;
+}
+.chat-detail-list {
+  padding: 15px;
 }
 #message-receive {
     height: 380px;
     margin: 5px;
     padding-right: 15px;
     overflow:scroll;
+    border-bottom: 1px solid #DCDFE6;
+}
+#message-tools {
+  padding: 10px 0px;
 }
 #message-send {
     height: 135px;
@@ -760,8 +903,8 @@ export default {
 .message-content {
     color: #414A60;
     background-color: #F2F5FA;
-    padding: 8px 20px;
-    margin-right: 50%;
+    padding: 8px 10px;
+    /* margin-right: 50%; */
     border-radius: 5px;
 }
 .message-content-origin {
@@ -859,6 +1002,12 @@ ul {
 .friend-tree-node {
   height: 50px;
 }
+.sr-image {
+  color: #414A60;
+  background-color: #F2F5FA;
+  padding: 8px 10px;
+  border-radius: 5px;
+}
 .image {
   width: 38px;
   height: 38px;
@@ -871,5 +1020,17 @@ ul {
   /* background-color: rgb(112, 118, 250); */
   background-color: #409eff;
   margin-right: 5px;
+}
+
+.group-list {
+  padding: 20px 5px;
+}
+
+#chat-label-detail-title {
+  padding:6px 0px;
+  text-align:center;
+  border-bottom: 1px solid #DCDFE6;
+  height:20px;
+  font-weight: bolder;
 }
 </style>

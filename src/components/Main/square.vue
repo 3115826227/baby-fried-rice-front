@@ -45,18 +45,22 @@
         <template v-if="current_select == 102">
           <part></part>
         </template>
-        <template v-else></template>
+        <template v-else-if="current_select == 111">
+          <discussion></discussion>
+        </template>
       </div>
     </div>
 </template>
 
 <script>
 import part from '../../components/Main/part.vue'
+import discussion from '../../components/Main/discussion.vue'
 
 export default {
   name: 'square',
   components: {
-    part
+    part,
+    discussion
   },
   data () {
     return {
