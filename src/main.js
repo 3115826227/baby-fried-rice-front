@@ -9,14 +9,16 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import * as ipTools from './assets/js/ipTools.js'
+// import apiConfig from '../config/api.config'
 Vue.prototype.$axios = axios.create({
   headers: {
     // 'content-type': 'application/json'
-    // 'Access-Control-Allow-Origin': '*'
+    // 'Access-Control-Allow-Origin': '*',
     // 'Access-Control-Allow-Headers': 'X-Requested-With'
     // 'Access-Control-Allow-Methods': '*'
   },
-  baseURL: 'http://localhost:8070/api',
+  // baseURL: apiConfig.baseURL,
+  // baseURL: 'http://localhost:18070/api',
   timeout: 5000
 })
 Vue.prototype.$axios.interceptors.request.use(

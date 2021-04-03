@@ -15,14 +15,14 @@ module.exports = {
         target: 'http://pv.sohu.com/', //源地址 
         changeOrigin: true, //改变源 
         pathRewrite: { 
-          '^/apis': '' //路径重写 
+          '^/apis': '/apis' //路径重写 
         } 
       },
       '/api': {
-        target: 'http://127.0.0.1:8070/api', //源地址 
+        target: 'http://127.0.0.1:18070', //源地址 
         changeOrigin: true, //改变源 
         pathRewrite: { 
-          '^/api': '' //路径重写 
+          '^/api': '/api' //路径重写 
         } 
       }
     },

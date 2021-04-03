@@ -130,7 +130,8 @@ export default {
         login_name: this.form.login_name,
         password: this.form.password,
         username: this.form.username,
-        gender: genderFlag
+        gender: genderFlag,
+        phone: this.form.phone
       })
         .then(function (response) {
           if (response.data.code === 0) {
@@ -226,8 +227,5 @@ export default {
   margin: 10px;
   font-weight: inherit;
   margin-bottom: 50px;
-}
-#submit {
-  /* text-align: center; */
 }
 </style>
