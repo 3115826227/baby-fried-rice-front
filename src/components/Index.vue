@@ -50,7 +50,8 @@ export default {
       value: new Date(),
       punchdialogVisible: false,
       levelList: null,
-      detail: {}
+      detail: {},
+      privateMessageUnreadNumber: 1
     }
   },
   computed: {
@@ -77,30 +78,33 @@ export default {
       this.levelList = matched
     },
     getDetail () {
-      var that = this
-      this.$axios.get('/account/user/detail', {
-        headers: {
-          token: sessionStorage.getItem('token')
-        }
-      })
-        .then(function (response) {
-          if (response.data.code === 0) {
-            that.detail = response.data.data
-            localStorage.setItem('id', that.detail.user_id)
-            localStorage.setItem('username', that.detail.username)
-          } else {
-            // window.location.href = '/'
-          }
-        })
-        .catch(function (error) {
-          console.log(error)
-          // window.location.href = '/'
-        })
+      this.detail.user_id = window.sessionStorage.getItem('user_id')
+      this.detail.username = window.sessionStorage.getItem('username')
+      // var that = this
+      // this.$axios.get('/account/user/detail', {
+      //   headers: {
+      //     token: sessionStorage.getItem('token')
+      //   }
+      // })
+      //   .then(function (response) {
+      //     if (response.data.code === 0) {
+      //       that.detail = response.data.data
+      //       localStorage.setItem('id', that.detail.user_id)
+      //       localStorage.setItem('username', that.detail.username)
+      //     } else {
+      //       // window.location.href = '/'
+      //     }
+      //   })
+      //   .catch(function (error) {
+      //     console.log(error)
+      //     // window.location.href = '/'
+      //   })
     },
     logout () {
-      this.$axios.get('/account/user/logout', {
+      console.log(sessionStorage.getItem('token'))
+      this.$axios.get('/api/account/user/logout', {
         headers: {
-          token: localStorage.getItem('token')
+          token: sessionStorage.getItem('token')
         }
       })
         .then(function (response) {

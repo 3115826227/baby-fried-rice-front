@@ -79,6 +79,12 @@ const constantRoutes = [
         index: 10,
         name: '个人中心',
         component: () => import('../components/Main/user.vue')
+      },
+      {
+        path: '/privatemessage',
+        index: 11,
+        name: '私信',
+        component: () => import('../components/Main/private_message.vue')
       }
     ]
   }, {
