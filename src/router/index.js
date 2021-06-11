@@ -26,12 +26,12 @@ const constantRoutes = [
         name: '聊天',
         component: () => import('../components/Main/im.vue')
       },
-      // {
-      //   path: '/space',
-      //   index: 2,
-      //   name: '好友圈',
-      //   component: () => import('../components/Main/space.vue')
-      // },
+      {
+        path: '/space',
+        index: 2,
+        name: '好友圈',
+        component: () => import('../components/Main/space.vue')
+      },
       // {
       //   path: '/news',
       //   index: 3,

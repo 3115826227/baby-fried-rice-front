@@ -75,9 +75,9 @@ export default {
           if (response.data.code === 0) {
             // window.localStorage.setItem('token', response.data.data.token)
             // window.localStorage.setItem('super', response.data.data.user_info.is_super)
-            window.sessionStorage.setItem('token', response.data.data.token)
-            window.sessionStorage.setItem('user_id', response.data.data.user_info.user_id)
-            window.sessionStorage.setItem('username', response.data.data.user_info.username)
+            sessionStorage.setItem('token', response.data.data.token)
+            sessionStorage.setItem('user_id', response.data.data.user_info.user_id)
+            sessionStorage.setItem('username', response.data.data.user_info.username)
             that.$router.push({path: '/index'})
           } else {
             console.log(response)

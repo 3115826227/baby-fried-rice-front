@@ -4,7 +4,7 @@
         <el-col>
           <el-card shadow="hover">
             <template style="padding:0 2px">
-              <span v-if="item.status" style="font-size:12px;color:green">
+              <span v-if="!item.message_status" style="font-size:12px;color:green">
                 未读
               </span>
               <span  v-else style="font-size:12px;color:gray">
@@ -23,18 +23,27 @@ export default {
   name: 'private_message',
   data () {
     return {
-      list: [
-        {
-          id: '1',
-          title: '私信1',
-          status: 1
-        },
-        {
-          id: '2',
-          title: '私信2',
-          status: 0
+      list: []
+    }
+  },
+  created () {
+    this.getPrivateMessageList()
+  },
+  methods: {
+    getPrivateMessageList () {
+      var that = this
+      this.$axios.get('/api/account/user/private_message', {
+        headers: {
+          token: sessionStorage.getItem('token')
         }
-      ]
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.list = response.data.data.list
+        }
+      })
+        .catch(function (error) {
+          console.log(error)
+        })
     }
   }
 }

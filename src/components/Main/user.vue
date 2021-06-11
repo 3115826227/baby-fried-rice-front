@@ -107,9 +107,9 @@ export default {
   methods: {
     getDetail () {
       var that = this
-      this.$axios.get('/account/user/detail', {
+      this.$axios.get('/api/account/user/detail', {
         headers: {
-          token: localStorage.getItem('token')
+          token: sessionStorage.getItem('token')
         }
       })
         .then(function (response) {
@@ -119,13 +119,13 @@ export default {
           } else {
             that.verify = ''
           }
-          that.detail.number = '1541305032'
-          that.detail.school = '邵阳学院'
-          that.detail.phone = '15688220367'
-          that.detail.faculty = '信息工程学院'
-          that.detail.grade = '2015'
-          that.detail.major = '网络工程'
-          that.detail.age = 23
+          // that.detail.number = '1541305032'
+          // that.detail.school = '邵阳学院'
+          // that.detail.phone = '15688220367'
+          // that.detail.faculty = '信息工程学院'
+          // that.detail.grade = '2015'
+          // that.detail.major = '网络工程'
+          // that.detail.age = 23
         })
         .catch(function (error) {
           console.log(error)

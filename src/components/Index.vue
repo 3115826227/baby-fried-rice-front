@@ -78,8 +78,10 @@ export default {
       this.levelList = matched
     },
     getDetail () {
-      this.detail.user_id = window.sessionStorage.getItem('user_id')
-      this.detail.username = window.sessionStorage.getItem('username')
+      // this.detail.user_id = window.sessionStorage.getItem('user_id')
+      // this.detail.username = window.sessionStorage.getItem('username')
+      this.detail.user_id = '1'
+      this.detail.username = '测试账号01'
       // var that = this
       // this.$axios.get('/account/user/detail', {
       //   headers: {
