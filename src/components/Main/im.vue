@@ -3,8 +3,8 @@
         <div id="im-list">
           <div id="im-list-tabs">
              <el-tabs v-model="activeName" type="border-card" @tab-click="handleClick" stretch style="height:600px">
-              <el-tab-pane label="消息" value="1">
-                <el-card class="border-card" v-for="(item, index) in sessions" :key="index">
+              <el-tab-pane label="消息" name="session">
+                <el-card class="border-card" v-for="(item, index) in sessions" :key="index" style="margin:2% 0">
                   <div @click="selectSession(item.session_id)">
                   <el-row>
                     <el-col :span="20">
@@ -18,22 +18,41 @@
                       </el-badge>
                     </el-col>
                   </el-row>
-                  <el-row style="color:gray;font-size:14px;">
-                    <el-col :span="16">
-                      {{item.latest_message.send.remark}}：{{item.latest_message.content}}
+                  <el-row style="color:gray;font-size:14px;" v-if="item.latest_message">
+                    <el-col :span="12">
+                      <span v-if="item.latest_message.send.account_id !== user_id">
+                        <span v-if="item.latest_message.send.remark === ''">{{item.latest_message.send.username}}</span>
+                        <span v-else="">{{item.latest_message.send.remark}}</span>
+                        ：</span>{{item.latest_message.content}}
                     </el-col>
-                    <el-col :span="8" style="text-align:right">
+                    <el-col :span="12" style="text-align:right">
                       {{timestampToTime(item.latest_message.send_timestamp)}}
                     </el-col>
                   </el-row>
                   </div>
                 </el-card>
               </el-tab-pane>
-              <el-tab-pane label="好友" name="2">
+              <el-tab-pane label="好友" name="friend">
+                <el-row style="margin:2% 0">
+                  <el-col :span="15" style="padding-right:4%">
+                    <el-input type="text" size="small" />
+                  </el-col>
+                  <el-col :span="4">
+                    <el-button type="success" size="small">查询</el-button>
+                  </el-col>
+                  <el-col :span="5" style="text-align:right">
+                    <el-button type="primary" size="small" @click="addFriendDrawer = true">添加好友</el-button>
+                  </el-col>
+                </el-row>
+                <el-card class="border-card" v-for="(item, index) in friends" :key="index" style="margin:2% 0" shadow="hover">
+                  <div>
+                    {{item.remark}}
+                  </div>
+                </el-card>
               </el-tab-pane>
-              <el-tab-pane label="群组" name="3">
+              <el-tab-pane label="群组" name="group">
               </el-tab-pane>
-              <el-tab-pane label="通知" name="4">
+              <el-tab-pane label="通知" name="notify">
                 <el-card class="border-card" v-for="(item, index) in operators" :key="index" style="margin:2% 0" shadow="hover">
                   <div @click="selectOperator(item)">
                     <el-row>
@@ -80,7 +99,17 @@
                       <span v-if="session.session_type === 0">双人会话</span>
                     </el-tag>
                   </div>
-                  <div id="panel" style="height:380px">
+                  <div id="im-messages" style="height:380px;overflow:auto">
+                    <template v-if="!noMoreMessage">
+                      <div style="text-align:center" @click="getMoreSessionMessages(session.session_id)">
+                        <el-link style="font-size:13px">查看更多消息</el-link>
+                      </div>
+                    </template>
+                    <template v-else="">
+                      <div style="text-align:center;font-size:13px;color:gray">
+                        没有更多消息了
+                      </div>
+                    </template>
                     <template>
                       <el-row v-for="(item,index) in messages" :key="index">
                         <div v-if="item.send.account_id === user_id">
@@ -96,8 +125,9 @@
                           </el-row>
                         </div>
                         <div v-else="">
-                          <div style="font-size:12px;color:gray">
-                            {{item.send.remark}}
+                          <div style="font-size:12px;color:gray" @click="openFriendDrawer(item.send.account_id)">
+                            <span v-if="item.send.remark !== ''">{{item.send.remark}}</span>
+                            <span v-else="">{{item.send.username}}</span>
                           </div>
                           <el-row>
                             <el-col :span="10" style="padding:1% 0;">
@@ -179,6 +209,87 @@
             </el-card>
           </div>
         </div>
+        <el-drawer title="添加好友" :visible.sync="addFriendDrawer" direction="rtl" :before-close="handleCloseAddFriendDrawer">
+          <div style="margin:5%">
+          <el-row>
+            <el-col :span="18">
+              <el-input type="text" v-model="query_user_form.account_id" placeholder="请输入好友账号" size="medium" />
+            </el-col>
+            <el-col :span="6" style="text-align:right">
+              <el-button type="primary" size="medium" @click="getUser">查询</el-button>
+            </el-col>
+          </el-row>
+          </div>
+          <div v-if="query_user.account_id !== ''" style="margin:5%">
+          <el-card class="border-card" shadow="hover">
+            <el-row>
+              <el-col :span="18">
+                {{query_user.username}}
+              </el-col>
+              <el-col :span="6" style="text-align:right">
+                <el-button type="primary" size="mini" @click="addFriend">添加好友</el-button>
+              </el-col>
+            </el-row>
+          </el-card>
+          </div>
+        </el-drawer>
+        <el-drawer
+        title="好友信息"
+        :visible.sync="friendDrawer"
+        direction="rtl"
+        :before-close="handleCloseFriendDrawer">
+          <div style="margin:5%">
+            <div style="text-align:center">
+              <el-avatar :src="friend.head_img_url" :size="180" fit="fit"></el-avatar>
+            </div>
+            <el-row style="margin: 5% 0">
+              <el-col :span="8" style="color:gray">
+                好友账号：
+              </el-col>
+              <el-col :span="16">
+                {{friend.account_id}}
+              </el-col>
+            </el-row>
+            <el-row style="margin: 5% 0">
+              <el-col :span="8" style="color:gray">
+                好友昵称：
+              </el-col>
+              <el-col :span="16">
+                {{friend.username}}
+              </el-col>
+            </el-row>
+            <el-row style="margin: 5% 0">
+              <el-col :span="8" style="color:gray">
+                好友性别：
+              </el-col>
+              <el-col :span="16">
+                <span v-if="friend.gender">男</span>
+                <span v-else="">女</span>
+              </el-col>
+            </el-row>
+            <el-row style="margin: 5% 0">
+              <el-col :span="8" style="color:gray">
+                好友年龄：
+              </el-col>
+              <el-col :span="16">
+                {{friend.age}}
+              </el-col>
+            </el-row>
+            <el-row style="margin: 5% 0">
+              <el-col :span="8" style="color:gray">
+                好友描述：
+              </el-col>
+              <el-col :span="16">
+                <span v-if="friend.describe !== ''">{{friend.describe}}</span>
+                <span v-else="">暂无描述</span>
+              </el-col>
+            </el-row>
+            <div style="text-align:center;margin: 10% 0;">
+              <el-button type="danger" size="medium">删除好友</el-button>
+              <el-button type="warning" size="medium">加入黑名单</el-button>
+            </div>
+          </div>
+        </el-drawer>
     </div>
 </template>
 <script>
@@ -188,13 +299,26 @@ export default {
   name: 'im',
   data () {
     return {
-      activeName: '1',
+      activeName: 'session',
+      friendDrawer: false,
+      addFriendDrawer: false,
       panel: 0,
       name: '1',
+      friend: {},
       friends: [],
       session: {
         session_id: 0
       },
+      session_message_req: {
+        session_id: 0,
+        page: 1,
+        page_size: 10
+      },
+      query_user_form: {},
+      query_user: {
+        account_id: ''
+      },
+      noMoreMessage: false,
       operator: {},
       send_form: {},
       sessions: [],
@@ -219,29 +343,50 @@ export default {
     this.initWebSocket()
   },
   methods: {
+    openFriendDrawer (accountId) {
+      this.friendDrawer = true
+      var that = this
+      this.$axios.get('/api/account/user/query?account_id=' + accountId, {
+        headers: {
+          token: sessionStorage.getItem('token')
+        }
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.friend = response.data.data
+        }
+      })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    handleCloseFriendDrawer (done) {
+      done()
+    },
+    handleCloseAddFriendDrawer (done) {
+      done()
+    },
+    scrollToBottom () {
+      this.$nextTick(() => {
+        var msg = document.getElementById('im-messages')
+        msg.scrollTop = msg.scrollHeight
+      })
+    },
     init () {
       this.user_id = sessionStorage.getItem('user_id')
       this.username = sessionStorage.getItem('username')
     },
+    add0 (m) {
+      return m < 10 ? '0' + m : m
+    },
     timestampToTime (timestamp) {
-      var date = new Date(timestamp)
-      var Y = date.getFullYear() + '-'
-      var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
-      var D = (date.getDate() + 1 < 10 ? '0' + (date.getDate() + 1) : date.getDate() + 1) + ' '
-      var h = date.getHours() + ':'
-      var m = (date.getMinutes() + 1 < 10 ? '0' + (date.getMinutes() + 1) : date.getMinutes() + 1)
-      var today = new Date()
-      let dateStr = ''
-      if (today.getFullYear() !== date.getFullYear()) {
-        dateStr += Y
-      }
-      if (today.getMonth !== date.getMonth) {
-        dateStr += M
-      }
-      if (today.getDate !== date.getDate) {
-        dateStr += D
-      }
-      return dateStr + h + m
+      var time = new Date(timestamp * 1000)
+      var y = time.getFullYear()
+      var m = time.getMonth() + 1
+      var d = time.getDate()
+      var h = time.getHours()
+      var mm = time.getMinutes()
+      var s = time.getSeconds()
+      return y + '-' + this.add0(m) + '-' + this.add0(d) + ' ' + this.add0(h) + ':' + this.add0(mm) + ':' + this.add0(s)
     },
     getSessions () {
       var that = this
@@ -273,10 +418,43 @@ export default {
           console.log(error)
         })
     },
+    getUser () {
+      var that = this
+      this.$axios.get('/api/account/user/query?account_id=' + this.query_user_form.account_id, {
+        headers: {
+          token: sessionStorage.getItem('token')
+        }
+      }).then(function (response) {
+        if (response.data.code === 0) {
+          that.query_user = response.data.data
+        }
+      })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
     selectSession (sessionId) {
       this.panel = 1
       this.getSessionDetail(sessionId)
-      this.getSessionMessages(sessionId)
+      this.getNewSessionMessages(sessionId)
+      var that = this
+      for (var i = 0; i < this.sessions.length; i++) {
+        if (this.sessions[i].session_id === sessionId) {
+          this.sessions[i].unread = 0
+          this.$axios.get('/api/im/session/message/read_status?session_id=' + sessionId, {
+            headers: {
+              token: sessionStorage.getItem('token')
+            }
+          }).then(function (response) {
+            if (response.data.code === 0) {
+              that.getSessions()
+            }
+          })
+            .catch(function (error) {
+              console.log(error)
+            })
+        }
+      }
     },
     selectOperator (item) {
       this.panel = 2
@@ -297,15 +475,38 @@ export default {
           console.log(error)
         })
     },
-    getSessionMessages (sessionId) {
+    getMoreSessionMessages (sessionId) {
+      this.session_message_req.session_id = sessionId
+      this.session_message_req.page += 1
+      this.getSessionMessages()
+    },
+    getNewSessionMessages (sessionId) {
+      this.messages = []
+      this.session_message_req.session_id = sessionId
+      this.session_message_req.page = 1
+      this.getSessionMessages()
+    },
+    getSessionMessages () {
       var that = this
-      this.$axios.get('/api/im/session/message?session_id=' + sessionId, {
+      this.$axios.get('/api/im/session/message?session_id=' + this.session_message_req.session_id + '&page=' + this.session_message_req.page + '&page_size=' + this.session_message_req.page_size, {
         headers: {
           token: sessionStorage.getItem('token')
         }
       }).then(function (response) {
         if (response.data.code === 0) {
+          if (response.data.data.messages.length < that.session_message_req.page_size) {
+            that.noMoreMessage = true
+          } else {
+            that.noMoreMessage = false
+          }
+          var messages = that.messages
+          messages.forEach(e => {
+            response.data.data.messages.push(e)
+          })
           that.messages = response.data.data.messages
+          if (that.session_message_req.page === 1) {
+            that.scrollToBottom()
+          }
         }
       })
         .catch(function (error) {
@@ -326,6 +527,28 @@ export default {
       })
         .catch(function (error) {
           console.log(error)
+        })
+    },
+    addFriend () {
+      var that = this
+      this.$axios.post('/api/im/session/friend', {
+        account_id: this.query_user.account_id
+      }, {
+        headers: {
+          token: sessionStorage.getItem('token')
+        }
+      })
+        .then(function (response) {
+          if (response.data.code === 0) {
+            that.$message.success('添加成功')
+            that.getFriends()
+          } else {
+            that.$message.error('请求出错')
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+          that.$message.error('请求出错')
         })
     },
     judgeIsConnect () {
@@ -380,14 +603,30 @@ export default {
       let redata = JSON.parse(e.data)
       console.log(redata)
       if (redata.ws_message_notify_type === 2) {
-        let newMessage = {
-          content: redata.ws_message.content,
-          send: redata.ws_message.send,
-          send_timestamp: redata.timestamp,
-          session_id: redata.ws_message.session_id
+        switch (redata.ws_message.session_message.session_message_type) {
+          case 1:
+          case 2:
+          case 3:
+            let newMessage = redata.ws_message.session_message.message
+            for (var i = 0; i < this.sessions.length; i++) {
+              if (this.sessions[i].session_id === newMessage.session_id) {
+                this.sessions[i].latest_message = newMessage
+                // 接收到的消息发送者不是自己，并且当前面板的不是接收到消息的会话
+                if (newMessage.send.account_id !== this.user_id) {
+                  if (this.messages.length === 0 || this.messages[0].session_id !== newMessage.session_id) {
+                    // 该会话未读条数加1
+                    this.sessions[i].unread += 1
+                  }
+                }
+              }
+            }
+            if (this.messages.length !== 0) {
+              if (this.messages[0].session_id === newMessage.session_id) {
+                this.messages.push(newMessage)
+                this.scrollToBottom()
+              }
+            }
         }
-        this.sessions[0].latest_message = newMessage
-        this.messages.push(newMessage)
       }
     },
     websocketsend (Data) { // 数据发送
@@ -404,8 +643,13 @@ export default {
       let actions = {
         ws_message_notify_type: 2,
         ws_message: {
-          session_id: this.session.session_id,
-          content: this.send_form.content
+          session_message: {
+            session_message_type: 3,
+            message: {
+              session_id: this.session.session_id,
+              content: this.send_form.content
+            }
+          }
         }
       }
       this.websocketsend(JSON.stringify(actions))

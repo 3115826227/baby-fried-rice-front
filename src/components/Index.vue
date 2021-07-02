@@ -9,7 +9,7 @@
               </asideBarItem>
               <el-submenu style="float:right;">
                 <template slot="title">
-                  <span><el-avatar size="small">{{detail.username[0]}}</el-avatar></span>
+                  <el-avatar :src="detail.head_img_url" size="small" fit="fit"></el-avatar>
                   <span>{{detail.username}}@baby.com</span>
                 </template>
                 <el-menu-item @click="toPunch">每日打卡</el-menu-item>
@@ -78,29 +78,23 @@ export default {
       this.levelList = matched
     },
     getDetail () {
-      // this.detail.user_id = window.sessionStorage.getItem('user_id')
-      // this.detail.username = window.sessionStorage.getItem('username')
-      this.detail.user_id = '1'
-      this.detail.username = '测试账号01'
-      // var that = this
-      // this.$axios.get('/account/user/detail', {
-      //   headers: {
-      //     token: sessionStorage.getItem('token')
-      //   }
-      // })
-      //   .then(function (response) {
-      //     if (response.data.code === 0) {
-      //       that.detail = response.data.data
-      //       localStorage.setItem('id', that.detail.user_id)
-      //       localStorage.setItem('username', that.detail.username)
-      //     } else {
-      //       // window.location.href = '/'
-      //     }
-      //   })
-      //   .catch(function (error) {
-      //     console.log(error)
-      //     // window.location.href = '/'
-      //   })
+      var that = this
+      this.$axios.get('/api/account/user/detail', {
+        headers: {
+          token: sessionStorage.getItem('token')
+        }
+      })
+        .then(function (response) {
+          that.detail = response.data.data
+          if (response.data.data.verify === true) {
+            that.verify = '已认证'
+          } else {
+            that.verify = ''
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
     },
     logout () {
       console.log(sessionStorage.getItem('token'))

@@ -126,7 +126,7 @@ export default {
       if (this.form.gender === '男') {
         genderFlag = true
       }
-      this.$axios.post('/user/register', {
+      this.$axios.post('/api/user/register', {
         login_name: this.form.login_name,
         password: this.form.password,
         username: this.form.username,
@@ -135,11 +135,15 @@ export default {
       })
         .then(function (response) {
           if (response.data.code === 0) {
+            that.$message.success('注册成功')
             that.$router.push({path: '/'})
+          } else {
+            that.$message.error('请求错误')
           }
         })
         .catch(function (error) {
           console.log(error)
+          that.$message.error('请求错误')
         })
     },
     onSuccess () {
