@@ -19,7 +19,7 @@ module.exports = {
         } 
       },
       '/api': {
-        target: 'http://localhost:8081/', //源地址 
+        target: 'http://127.0.0.1:18070/', //源地址 
         changeOrigin: true, //改变源 
         pathRewrite: { 
           '^/api': '/api' //路径重写 

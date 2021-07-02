@@ -3,12 +3,12 @@
       <el-divider></el-divider>
       <div id="left-panel">
         <div class="user-img">
-          <el-avatar icon="el-icon-user-solid" :size="150"></el-avatar>
+          <el-avatar :src="detail.head_img_url" :size="180" fit="fit"></el-avatar>
         </div>
         <div style="font-size:13px;"><el-link>点击更换头像</el-link></div>
         <div class="user-panel">
           <div class="user-title">我的生活哲理</div>
-          <div class="user-desc">&nbsp;&nbsp;&nbsp;&nbsp;{{user_desc}}</div>
+          <div class="user-desc">&nbsp;&nbsp;&nbsp;&nbsp;{{detail.describe}}</div>
           <div>
             <el-link>编辑</el-link>
           </div>
@@ -19,7 +19,7 @@
           <div class="base-info-title">基本信息</div>
           <div class="base-info-panel">
             <el-row>
-              <el-col :span="6">ID：</el-col>
+              <el-col :span="6">账号：</el-col>
               <el-col :span="10" style="text-align: right;">{{detail.account_id}}</el-col>
             </el-row>
             <el-row>
